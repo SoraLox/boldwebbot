@@ -1,5 +1,5 @@
 """Клавиатуры бота."""
-from keyboards.main import get_main_keyboard, get_contact_keyboard
+from keyboards.main import get_main_keyboard, get_main_inline_keyboard, get_contact_keyboard
 from keyboards.inline import (
     get_quiz_keyboard_business,
     get_quiz_keyboard_goal,

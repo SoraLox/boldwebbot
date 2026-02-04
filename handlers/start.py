@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from database import db
-from keyboards import get_main_keyboard
+from keyboards import get_main_keyboard, get_main_inline_keyboard
 from utils.messages import WELCOME_MESSAGE, PRICE_LIST, HELP_MESSAGE, FAQ_MESSAGE
 
 logger = logging.getLogger("bot")
@@ -21,7 +21,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         WELCOME_MESSAGE,
         parse_mode="Markdown",
-        reply_markup=get_main_keyboard(),
+        reply_markup=get_main_inline_keyboard(),
     )
 
 
@@ -29,7 +29,7 @@ async def cmd_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Команда /menu: показать главное меню."""
     await update.message.reply_text(
         "Главное меню:",
-        reply_markup=get_main_keyboard(),
+        reply_markup=get_main_inline_keyboard(),
     )
 
 
@@ -59,32 +59,59 @@ async def cmd_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def handle_main_menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработка кнопок главного меню."""
+    """Обработка кнопок главного меню (Reply)."""
     text = (update.message and update.message.text) or ""
     if text == "💰 Цены и услуги":
-        await update.message.reply_text(PRICE_LIST, parse_mode="Markdown")
+        await update.message.reply_text(PRICE_LIST, parse_mode="Markdown", reply_markup=get_main_inline_keyboard())
     elif text == "❓ FAQ":
-        await update.message.reply_text(FAQ_MESSAGE, parse_mode="Markdown")
+        await update.message.reply_text(FAQ_MESSAGE, parse_mode="Markdown", reply_markup=get_main_inline_keyboard())
     elif text == "👤 Мой кабинет":
         await update.message.reply_text(
             "Проверить статус заявки: /status\nВаши заявки отображаются здесь.",
+            reply_markup=get_main_inline_keyboard(),
         )
     else:
         await update.message.reply_text(
             "Используйте кнопки меню или команды: /menu, /order, /price",
-            reply_markup=get_main_keyboard(),
+            reply_markup=get_main_inline_keyboard(),
+        )
+
+
+async def handle_main_menu_inline(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработка Inline-кнопок главного меню."""
+    q = update.callback_query
+    await q.answer()
+    
+    if q.data == "menu_order":
+        # Запуск квиза
+        from handlers.quiz import cmd_order
+        result = await cmd_order(update, context)
+        # cmd_order теперь обрабатывает и callback_query
+        return
+    elif q.data == "menu_price":
+        await q.edit_message_text(PRICE_LIST, parse_mode="Markdown", reply_markup=get_main_inline_keyboard())
+    elif q.data == "menu_faq":
+        await q.edit_message_text(FAQ_MESSAGE, parse_mode="Markdown", reply_markup=get_main_inline_keyboard())
+    elif q.data == "menu_status":
+        from handlers.order import cmd_status
+        # Для статуса нужно отправить новое сообщение, т.к. cmd_status ожидает message
+        await context.bot.send_message(
+            chat_id=q.message.chat_id,
+            text="Проверить статус заявки: /status\nВаши заявки отображаются здесь.",
+            reply_markup=get_main_inline_keyboard(),
         )
 
 
 def register_start_handlers(application) -> None:
     """Регистрация обработчиков start и меню."""
-    from telegram.ext import CommandHandler, MessageHandler, filters
+    from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
     application.add_handler(CommandHandler("start", cmd_start))
     application.add_handler(CommandHandler("menu", cmd_menu))
     application.add_handler(CommandHandler("help", cmd_help))
     application.add_handler(CommandHandler("portfolio", cmd_portfolio))
     application.add_handler(CommandHandler("price", cmd_price))
+    application.add_handler(CallbackQueryHandler(handle_main_menu_inline, pattern="^menu_"))
     application.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,

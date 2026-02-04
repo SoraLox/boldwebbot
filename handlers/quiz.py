@@ -55,14 +55,24 @@ async def cmd_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not user:
         return ConversationHandler.END
     if db.count_orders_last_hour(user.id) >= MAX_ORDERS_PER_HOUR:
-        await update.message.reply_text(
-            "Вы уже отправили несколько заявок за последний час. Пожалуйста, подождите.",
-            reply_markup=get_main_keyboard(),
-        )
+        msg = "Вы уже отправили несколько заявок за последний час. Пожалуйста, подождите."
+        if update.message:
+            await update.message.reply_text(msg, reply_markup=get_main_keyboard())
+        elif update.callback_query:
+            await update.callback_query.edit_message_text(msg)
         return ConversationHandler.END
     context.user_data["quiz_data"] = {}
-    await update.message.reply_text(QUIZ_INTRO, parse_mode="Markdown")
-    await update.message.reply_text(QUIZ_Q1, parse_mode="Markdown", reply_markup=get_quiz_keyboard_business())
+    if update.message:
+        await update.message.reply_text(QUIZ_INTRO, parse_mode="Markdown")
+        await update.message.reply_text(QUIZ_Q1, parse_mode="Markdown", reply_markup=get_quiz_keyboard_business())
+    elif update.callback_query:
+        await update.callback_query.edit_message_text(QUIZ_INTRO, parse_mode="Markdown")
+        await context.bot.send_message(
+            chat_id=update.callback_query.message.chat_id,
+            text=QUIZ_Q1,
+            parse_mode="Markdown",
+            reply_markup=get_quiz_keyboard_business(),
+        )
     return QUIZ_BUSINESS
 
 
@@ -202,6 +212,7 @@ def get_quiz_conversation_handler() -> ConversationHandler:
         entry_points=[
             CommandHandler("order", cmd_order),
             MessageHandler(filters.Regex("^🎯 ЗАКАЗАТЬ САЙТ$"), cmd_order),
+            CallbackQueryHandler(cmd_order, pattern="^menu_order$"),
         ],
         states={
             QUIZ_BUSINESS: [CallbackQueryHandler(quiz_answer_business, pattern="^quiz_business_")],
