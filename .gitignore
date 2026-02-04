@@ -1,0 +1,10 @@
+.env
+*.pyc
+__pycache__/
+data/
+bot.log
+*.db
+venv/
+.venv/
+credentials.json
+*.csv
