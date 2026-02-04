@@ -39,5 +39,4 @@ GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "")
     QUIZ_BUSINESS,
     QUIZ_GOAL,
     QUIZ_CONTACT,
-    QUIZ_CONFIRM,
-) = range(4)
+) = range(3)
