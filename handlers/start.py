@@ -63,13 +63,6 @@ async def handle_main_menu_buttons(update: Update, context: ContextTypes.DEFAULT
     text = (update.message and update.message.text) or ""
     if text == "💰 Цены и услуги":
         await update.message.reply_text(PRICE_LIST, parse_mode="Markdown")
-    elif text == "📁 Портфолио":
-        await update.message.reply_text(
-            "Примеры наших работ: /portfolio\n"
-            "Здесь будут фото лендингов. Добавьте изображения в папку assets/portfolio/ и настройте отправку в handlers.",
-        )
-    elif text == "📞 Контакты":
-        await update.message.reply_text(HELP_MESSAGE, parse_mode="Markdown")
     elif text == "❓ FAQ":
         await update.message.reply_text(FAQ_MESSAGE, parse_mode="Markdown")
     elif text == "👤 Мой кабинет":
@@ -78,7 +71,7 @@ async def handle_main_menu_buttons(update: Update, context: ContextTypes.DEFAULT
         )
     else:
         await update.message.reply_text(
-            "Используйте кнопки меню или команды: /menu, /order, /portfolio, /price",
+            "Используйте кнопки меню или команды: /menu, /order, /price",
             reply_markup=get_main_keyboard(),
         )
 

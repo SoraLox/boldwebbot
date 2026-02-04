@@ -20,8 +20,6 @@ async def notify_managers_about_order(
     phone: str,
     business_type: str,
     goal: str,
-    timeline: str,
-    materials: str,
 ) -> None:
     """Отправить уведомление о новой заявке: в чат команды, в канал, лично менеджерам."""
     text = ORDER_NOTIFY_MANAGER.format(
@@ -31,8 +29,6 @@ async def notify_managers_about_order(
         phone=phone or "—",
         business_type=business_type or "—",
         goal=goal or "—",
-        timeline=timeline or "—",
-        materials=materials or "—",
     )
     for chat_id in [MANAGER_CHAT_ID, ORDERS_CHANNEL_ID] + (MANAGER_TELEGRAM_IDS or []):
         if not chat_id:
