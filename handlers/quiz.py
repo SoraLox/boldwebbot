@@ -20,6 +20,7 @@ from config import (
 from database import db
 from keyboards import (
     get_main_keyboard,
+    get_main_inline_keyboard,
     get_contact_keyboard,
     get_quiz_keyboard_business,
     get_quiz_keyboard_goal,
@@ -146,6 +147,7 @@ async def quiz_contact_received(update: Update, context: ContextTypes.DEFAULT_TY
     await update.message.reply_text(
         ORDER_CONFIRM_TEMPLATE.format(order_id=order_id),
         parse_mode="Markdown",
+        reply_markup=get_main_inline_keyboard(),
     )
     
     await notify_managers_about_order(
