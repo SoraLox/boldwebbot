@@ -19,8 +19,12 @@ STUDIO_NAME = os.getenv("STUDIO_NAME", "Лендинг Студия")
 
 # Админ и уведомления
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip()]
-MANAGER_CHAT_ID = os.getenv("MANAGER_CHAT_ID", "")  # Чат команды
-ORDERS_CHANNEL_ID = os.getenv("ORDERS_CHANNEL_ID", "")  # Канал заявок
+# Чат команды (может быть отрицательным числом для групп)
+_manager_chat_id = os.getenv("MANAGER_CHAT_ID", "").strip()
+MANAGER_CHAT_ID = int(_manager_chat_id) if _manager_chat_id else None
+# Канал заявок (может быть отрицательным числом для каналов)
+_orders_channel_id = os.getenv("ORDERS_CHANNEL_ID", "").strip()
+ORDERS_CHANNEL_ID = int(_orders_channel_id) if _orders_channel_id else None
 MANAGER_TELEGRAM_IDS = [int(x) for x in os.getenv("MANAGER_TELEGRAM_IDS", "").split(",") if x.strip()]
 
 # Лимиты

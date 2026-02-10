@@ -1,4 +1,5 @@
 """Интеграции: Google Sheets, уведомления менеджерам."""
+import logging
 from pathlib import Path
 
 from config import (
@@ -10,6 +11,8 @@ from config import (
 )
 from database import db
 from utils.messages import ORDER_NOTIFY_MANAGER
+
+logger = logging.getLogger("bot")
 
 
 async def notify_managers_about_order(
@@ -30,17 +33,42 @@ async def notify_managers_about_order(
         business_type=business_type or "—",
         goal=goal or "—",
     )
-    for chat_id in [MANAGER_CHAT_ID, ORDERS_CHANNEL_ID] + (MANAGER_TELEGRAM_IDS or []):
-        if not chat_id:
-            continue
+    
+    # Собираем все chat_id для отправки
+    chat_ids = []
+    
+    # Чат команды
+    if MANAGER_CHAT_ID is not None:
+        chat_ids.append(MANAGER_CHAT_ID)
+    
+    # Канал заявок
+    if ORDERS_CHANNEL_ID is not None:
+        chat_ids.append(ORDERS_CHANNEL_ID)
+    
+    # Личные ID менеджеров
+    if MANAGER_TELEGRAM_IDS:
+        chat_ids.extend(MANAGER_TELEGRAM_IDS)
+    
+    if not chat_ids:
+        logger.warning("Не указаны получатели уведомлений (MANAGER_CHAT_ID, ORDERS_CHANNEL_ID, MANAGER_TELEGRAM_IDS)")
+        return
+    
+    # Отправляем уведомления
+    sent_count = 0
+    for chat_id in chat_ids:
         try:
             await bot.send_message(
                 chat_id=chat_id,
                 text=text,
                 parse_mode="Markdown",
             )
-        except Exception:
-            pass
+            sent_count += 1
+            logger.info(f"Уведомление о заявке {order_id} отправлено в {chat_id}")
+        except Exception as e:
+            logger.error(f"Ошибка отправки уведомления в {chat_id}: {e}")
+    
+    if sent_count == 0:
+        logger.error(f"Не удалось отправить уведомление о заявке {order_id} ни одному получателю")
 
 
 def export_orders_to_sheets() -> bool:
